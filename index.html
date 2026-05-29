@@ -139,14 +139,13 @@
             border-bottom: 3px solid #ffb703;
             gap: 10px;
         }
-        .topbar-center { font-size: 20px; font-weight: bold; color: white; }
+        .topbar-center { font-size: 18px; font-weight: bold; color: white; }
         .topbar-right, .topbar-left { display: flex; gap: 8px; align-items: center; }
         .top-btn { padding: 6px 12px; border: none; border-radius: 12px; font-size: 13px; font-weight: bold; color: white; }
         .stage { background: #e63946; }
         .turn { background: #06d6a0; }
         .timer-bg { background: #8338ec; }
-        .music { background: #f77f00; cursor: pointer; }
-        .start-btn { background: #06d6a0; cursor: pointer; }
+        .music { background: #f77f00; cursor: pointer; padding: 6px 14px; font-size: 15px; }
 
         .game-container { display: flex; flex: 1; padding: 8px; gap: 10px; }
         .player-side {
@@ -171,9 +170,42 @@
         .empty-square.filled { background: #00b4d8; color: white; font-size: 12px; text-align: center; padding: 2px; }
 
         .center-area { width: 54%; display: flex; flex-direction: column; gap: 8px; }
-        .target-banner { background: black; border: 3px dashed #ffb703; border-radius: 15px; padding: 8px; font-size: 22px; font-weight: bold; color: #ffb703; text-align: center; }
         
-        /* منطقة الشجرة والتعديل الجديد عليها */
+        /* لافتة التحدي وبداخلها زر البدء لضمان ظهوره دائماً */
+        .target-banner { 
+            background: black; 
+            border: 3px dashed #ffb703; 
+            border-radius: 15px; 
+            padding: 10px; 
+            font-size: 22px; 
+            font-weight: bold; 
+            color: #ffb703; 
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 55px;
+        }
+
+        .mid-start-btn {
+            background: #06d6a0;
+            color: white;
+            border: 2px solid white;
+            padding: 6px 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            animation: pulse-glow 1.5s infinite;
+        }
+
+        @keyframes pulse-glow {
+            0% { transform: scale(1); box-shadow: 0 0 5px #06d6a0; }
+            50% { transform: scale(1.05); box-shadow: 0 0 15px #06d6a0; }
+            100% { transform: scale(1); box-shadow: 0 0 5px #06d6a0; }
+        }
+        
+        /* منطقة الشجرة */
         .tree-zone {
             flex: 1;
             width: 100%;
@@ -189,13 +221,13 @@
         .tree-img { height: 100%; width: 100%; object-fit: fill; position: absolute; z-index: 1; }
         .names-overlay { position: absolute; inset: 0; bottom: 145px; z-index: 5; }
 
-        /* 🔎 تكبير لافتة صورة الخطوط والحروف أسفل جذع الشجرة لسهولة رؤية الطفل لها */
+        /* لافتة صورة الخطوط والحروف أسفل جذع الشجرة */
         .tree-trunk-banner {
             position: absolute;
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 135px; /* تم تكبير الارتفاع لتبدو واضحة جداً للطفل */
+            height: 135px;
             z-index: 6;
             background: #ffffff;
             border-top: 4px solid #ffb703;
@@ -248,16 +280,24 @@
         .modal-harvest-list { margin-top: 5px; padding: 10px; background: #07111f; border-radius: 8px; border: 1px solid #4a5768; font-size: 15px; color: #06d6a0; word-wrap: break-word; line-height: 1.8; text-align: center; }
         .modal-box button.next-stage-btn { background: #06d6a0; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; }
 
+        /* تعديلات شاشات الموبايل المتجاوبة لتفادي الاختفاء */
         @media (max-width: 768px) {
-            .game-container { flex-direction: column; }
-            .center-area { width: 100%; }
-            .player-side { width: 100%; flex-direction: row; justify-content: space-around; }
-            .tree-zone { min-height: 400px; }
-            .tree-trunk-banner { height: 100px; }
-            .names-overlay { bottom: 110px; }
-            .leaf-name-btn { font-size: 14px; padding: 4px 8px; min-width: 65px; }
-            .cards-grid { display: flex; }
-            .empty-square { width: 32px; height: 32px; font-size: 11px; }
+            body { padding: 2px; }
+            .game-container { flex-direction: column; gap: 5px; }
+            .center-area { width: 100%; order: 1; }
+            .player-side { width: 100%; flex-direction: row; justify-content: space-around; padding: 5px; order: 2; border-width: 2px; }
+            .player-avatar-box { width: 40px; height: 40px; margin-bottom: 0; }
+            .tree-zone { min-height: 380px; }
+            .tree-trunk-banner { height: 110px; }
+            .names-overlay { bottom: 120px; }
+            .leaf-name-btn { font-size: 16px; padding: 5px 10px; min-width: 70px; }
+            .cards-grid { display: flex; width: auto; gap: 4px; }
+            .empty-square { width: 30px; height: 30px; font-size: 11px; }
+            .target-banner { font-size: 18px; padding: 6px; min-height: 50px; }
+            .mid-start-btn { font-size: 16px; padding: 4px 15px; }
+            .topbar { padding: 6px; }
+            .topbar-center { font-size: 14px; }
+            .top-btn { padding: 4px 8px; font-size: 11px; }
         }
     </style>
 </head>
@@ -291,12 +331,10 @@
             <div class="topbar-left">
                 <button class="top-btn timer-bg" id="roundTimer">الوقت: 10ث</button>
                 <button class="top-btn music" onclick="toggleAudio()">🎵</button>
-                <button class="top-btn start-btn" id="mainStartBtn" onclick="startActualGame()">▶ ابدأ المباراة</button>
             </div>
         </div>
 
         <div class="game-container">
-            <!-- لاعب 1 -->
             <div class="player-side active" id="p1Area">
                 <div class="player-avatar-box"><img src="cat2.png" alt="اللاعب 1"></div>
                 <div>
@@ -307,21 +345,21 @@
                 <div class="cards-grid" id="p1Grid"></div>
             </div>
 
-            <!-- المنتصف -->
             <div class="center-area">
-                <div class="target-banner" id="targetDisplay">اقطف حرف: [ ... ]</div>
+                <div class="target-banner" id="targetDisplay">
+                    <button class="mid-start-btn" id="mainStartBtn" onclick="startActualGame()">▶ ابدأ المباراة الآن</button>
+                </div>
+                
                 <div class="tree-zone">
                     <img src="tree.jfif" class="tree-img" alt="شجرة">
                     <div class="names-overlay" id="treeNamesContainer"></div>
                     
-                    <!-- 🔎 تم تكبير هذه اللوحة خصيصاً ليراها الطفل بوضوح كامل -->
                     <div class="tree-trunk-banner">
                         <img src="alphabets.jpeg" alt="لوحة الحروف الأبجدية الملونة">
                     </div>
                 </div>
             </div>
 
-            <!-- لاعب 2 -->
             <div class="player-side" id="p2Area">
                 <div class="player-avatar-box"><img src="brid.png" alt="اللاعب 2"></div>
                 <div>
@@ -334,7 +372,6 @@
         </div>
     </div>
 
-    <!-- مودال نهاية المرحلة والترتيب الأبجدي الشامل -->
     <div class="modal" id="stageModal">
         <div class="modal-box">
             <div class="trophy-icon" id="modalTrophy">🏆</div>
@@ -354,7 +391,6 @@
     <audio id="gameAudio" loop><source src="abgd.mp3" type="audio/mpeg"></audio>
 
     <script>
-        // المستودع الأساسي والوحيد للأسماء المأخوذ من الملف image_bccc7f.jpg
         let mainNamesPool = [
             "أحمد", "بهاء", "جابر", "هاني", "حنان", "يوسف", "محمود", "سعد", 
             "عصمت", "صلاح", "شعبان", "ظريف", "زياد", "ضياء", "دنيا", "طاهرة", 
@@ -362,14 +398,13 @@
             "فهيمة", "ناهد", "قمر", "رضا"
         ];
 
-        // مصفوفة ديناميكية يتم الحذف منها لضمان عدم التكرار مطلقاً
         let dynamicNamesPool = [...mainNamesPool];
 
         const leafCoordinates = [
-            {top: '15%', left: '50%'}, {top: '20%', left: '30%'}, {top: '20%', left: '70%'}, 
-            {top: '28%', left: '20%'}, {top: '26%', left: '50%'}, {top: '28%', left: '80%'},
-            {top: '38%', left: '15%'}, {top: '36%', left: '38%'}, {top: '35%', left: '62%'}, {top: '38%', left: '85%'},
-            {top: '48%', left: '25%'}, {top: '46%', left: '50%'}, {top: '48%', left: '75%'}
+            {top: '15%', left: '50%'}, {top: '22%', left: '28%'}, {top: '22%', left: '72%'}, 
+            {top: '32%', left: '18%'}, {top: '30%', left: '50%'}, {top: '32%', left: '82%'},
+            {top: '44%', left: '15%'}, {top: '42%', left: '38%'}, {top: '40%', left: '62%'}, {top: '44%', left: '85%'},
+            {top: '55%', left: '25%'}, {top: '52%', left: '50%'}, {top: '55%', left: '75%'}
         ];
 
         let userRole = 1; 
@@ -381,7 +416,6 @@
         let p1StageNames = []; let p2StageNames = [];
         let p1AllTimeNames = []; let p2AllTimeNames = [];
 
-        // ضبط توزيع المربعات للوصول لـ 14 حرفاً في المرحلة 4 (النهاية)
         let currentMaxSquares = 3; 
         let activeStageNames = [];
         let currentTargetLetter = "";
@@ -422,10 +456,9 @@
         }
 
         function setStageRules() {
-            // التوزيع المثالي للوصول إلى 14 اسماً بدون تكرار في المرحلة الأخيرة
             if (stage === 1) currentMaxSquares = 3;
             else if (stage === 2) currentMaxSquares = 4;
-            else if (stage === 3) currentMaxSquares = 7; // المجموع هنا يصبح 14 حرفاً كاملاً
+            else if (stage === 3) currentMaxSquares = 7; 
             else currentMaxSquares = 14; 
         }
 
@@ -450,12 +483,10 @@
             const container = document.getElementById('treeNamesContainer');
             container.innerHTML = "";
             
-            // إعادة تعبئة المصفوفة إذا نفدت لتفادي توقف اللعبة المفاجئ
             if (dynamicNamesPool.length < 6) {
                 dynamicNamesPool = [...mainNamesPool];
             }
 
-            // خلط الأسماء المتاحة حالياً وضمان عدم سحب أسماء مكررة تم قطفها
             let shuffled = dynamicNamesPool.sort(() => 0.5 - Math.random());
             activeStageNames = shuffled.slice(0, Math.min(7, leafCoordinates.length));
 
@@ -476,12 +507,16 @@
             currentTargetLetter = randomName.charAt(0);
             if(["أ","إ","آ"].includes(currentTargetLetter)) currentTargetLetter = "أ";
 
-            document.getElementById('targetDisplay').innerText = `اقطف اسم يبدأ بحرف: [ ${currentTargetLetter} ]`;
+            // لا نغير النص إلا إذا كانت المباراة قد بدأت بالفعل لتفادي مسح زر البدء
+            if (isGameActive) {
+                document.getElementById('targetDisplay').innerText = `اقطف اسم يبدأ بحرف: [ ${currentTargetLetter} ]`;
+            }
         }
 
         function startActualGame() {
             isGameActive = true;
-            document.getElementById('mainStartBtn').style.display = 'none';
+            // إظهار التحدي الأول فوراً للطفل مكان زر البدء
+            document.getElementById('targetDisplay').innerText = `اقطف اسم يبدأ بحرف: [ ${currentTargetLetter} ]`;
             startTimer();
         }
 
@@ -513,7 +548,6 @@
                 buttonElement.classList.add('correct-pick');
                 clearInterval(gameTimerInterval);
 
-                // 🛑 إزالة الاسم فوراً من مستودع اللعبة لمنع تكراره لاحقاً للطفل
                 dynamicNamesPool = dynamicNamesPool.filter(n => n !== chosenName);
 
                 if(userRole === 1) {
@@ -565,12 +599,10 @@
             document.getElementById('modalP1Result').innerText = `👤 [ ${p1Name} ] - إجمالي العملات: 🪙 ${p1Coins}`;
             document.getElementById('modalP2Result').innerText = `👤 [ ${p2Name} ] - إجمالي العملات: 🪙 ${p2Coins}`;
 
-            // إنهاء اللعبة الكلي عند الوصول للعدد المطلوب (14 اسماً فريداً)
             if (stage >= 3 || p1AllTimeNames.length >= 14 || p2AllTimeNames.length >= 14) {
                 trophy.style.display = 'block';
                 modalTitle.innerText = "🏆 التحدي النهائي الشامل (14 اسماً فريداً دون تكرار) 🏆";
                 
-                // فرز أبجدي كامل ونظيف
                 let p1Sorted = arabicAlphabeticalSort([...p1AllTimeNames]).slice(0, 14);
                 let p2Sorted = arabicAlphabeticalSort([...p2AllTimeNames]).slice(0, 14);
 
@@ -612,14 +644,16 @@
             p1FilledSquares = 0; p2FilledSquares = 0;
             p1StageNames = []; p2StageNames = [];
             p1AllTimeNames = []; p2AllTimeNames = [];
-            dynamicNamesPool = [...mainNamesPool]; // استعادة مصفوفة الأسماء كاملة
+            dynamicNamesPool = [...mainNamesPool];
             document.getElementById('p1Coins').innerText = "0";
             document.getElementById('p2Coins').innerText = "0";
+            
+            // إعادة عرض زر البدء عند التصفير الكامل
+            document.getElementById('targetDisplay').innerHTML = `<button class="mid-start-btn" id="mainStartBtn" onclick="startActualGame()">▶ ابدأ المباراة الآن</button>`;
+            
             setStageRules();
             setupGrids();
             generateLeavesOnTree();
-            isGameActive = true;
-            startTimer();
         }
 
         function toggleAudio() {
