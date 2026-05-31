@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🌳 تحدي شجرة الحروف الأبجدية</title>
+    <title>🌳 تحدي شجرة الحروف الأبجدية - أونلاين</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -171,7 +171,6 @@
 
         .center-area { width: 54%; display: flex; flex-direction: column; gap: 8px; }
         
-        /* لافتة التحدي وبداخلها زر البدء لضمان ظهوره دائماً */
         .target-banner { 
             background: black; 
             border: 3px dashed #ffb703; 
@@ -179,12 +178,26 @@
             padding: 10px; 
             font-size: 22px; 
             font-weight: bold; 
-            color: #ffb703; 
+            color: white; 
             text-align: center;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 55px;
+        }
+
+        .glowing-target-letter {
+            font-size: 38px;
+            color: #ffb703;
+            margin: 0 10px;
+            display: inline-block;
+            text-shadow: 0 0 10px #ffb703, 0 0 20px #ffb703, 0 0 30px #f77f00;
+            animation: letter-pulse 1s infinite alternate;
+        }
+
+        @keyframes letter-pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.15); }
         }
 
         .mid-start-btn {
@@ -221,7 +234,6 @@
         .tree-img { height: 100%; width: 100%; object-fit: fill; position: absolute; z-index: 1; }
         .names-overlay { position: absolute; inset: 0; bottom: 145px; z-index: 5; }
 
-        /* لافتة صورة الخطوط والحروف أسفل جذع الشجرة */
         .tree-trunk-banner {
             position: absolute;
             bottom: 0;
@@ -235,9 +247,15 @@
             justify-content: center;
             align-items: center;
             padding: 5px;
-            box-shadow: 0 -4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 -4px 20px rgba(255, 183, 3, 0.4);
+            animation: board-glow 2s infinite alternate;
         }
         .tree-trunk-banner img { height: 100%; width: 100%; object-fit: contain; }
+
+        @keyframes board-glow {
+            0% { box-shadow: 0 -4px 10px rgba(255, 183, 3, 0.2); border-top-color: #ffb703; }
+            100% { box-shadow: 0 -4px 25px rgba(6, 214, 160, 0.6); border-top-color: #06d6a0; }
+        }
 
         .leaf-name-btn {
             position: absolute;
@@ -280,7 +298,6 @@
         .modal-harvest-list { margin-top: 5px; padding: 10px; background: #07111f; border-radius: 8px; border: 1px solid #4a5768; font-size: 15px; color: #06d6a0; word-wrap: break-word; line-height: 1.8; text-align: center; }
         .modal-box button.next-stage-btn { background: #06d6a0; color: white; border: none; padding: 12px 30px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 15px; width: 100%; }
 
-        /* تعديلات شاشات الموبايل المتجاوبة لتفادي الاختفاء */
         @media (max-width: 768px) {
             body { padding: 2px; }
             .game-container { flex-direction: column; gap: 5px; }
@@ -325,7 +342,7 @@
         <div class="topbar">
             <div class="topbar-right">
                 <button class="top-btn stage" id="stageDisplay">المرحلة: 1</button>
-                <button class="top-btn turn" id="turnDisplay">سباق الحروف الهجائية 🏁</button>
+                <button class="top-btn turn" id="turnDisplay">إعداد الغرفة... ⏳</button>
             </div>
             <div class="topbar-center">🌳 شجرة الحروف الهجائية</div>
             <div class="topbar-left">
@@ -347,7 +364,8 @@
 
             <div class="center-area">
                 <div class="target-banner" id="targetDisplay">
-                    <button class="mid-start-btn" id="mainStartBtn" onclick="startActualGame()">▶ ابدأ المباراة الآن</button>
+                    <button class="mid-start-btn" id="mainStartBtn" onclick="requestStartGame()" style="display:none;">▶ ابدأ المباراة الآن</button>
+                    <span id="waitingMessage">بانتظار اتصال اللاعبين...</span>
                 </div>
                 
                 <div class="tree-zone">
@@ -384,13 +402,23 @@
                 <p id="modalP2Result"></p>
                 <div class="modal-harvest-list" id="p2HarvestList"></div>
             </div>
-            <button class="next-stage-btn" id="modalActionBtn" onclick="closeModalAndNext()">موافق ◀</button>
+            <button class="next-stage-btn" id="modalActionBtn">موافق ◀</button>
         </div>
     </div>
 
     <audio id="gameAudio" loop><source src="abgd.mp3" type="audio/mpeg"></audio>
 
     <script>
+        const SUPABASE_URL = "https://your-project-url.supabase.co"; 
+        const SUPABASE_ANON_KEY = "your-anon-key-here";
+
+        let supabaseClient = null;
+        let gameChannel = null;
+
+        if(SUPABASE_URL !== "https://your-project-url.supabase.co") {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        }
+
         let mainNamesPool = [
             "أحمد", "بهاء", "جابر", "هاني", "حنان", "يوسف", "محمود", "سعد", 
             "عصمت", "صلاح", "شعبان", "ظريف", "زياد", "ضياء", "دنيا", "طاهرة", 
@@ -409,7 +437,7 @@
 
         let userRole = 1; 
         let stage = 1;
-        let p1Name = "اللاعب 1"; let p2Name = "اللاعب 2";
+        let p1Name = "اللاعب الأول"; let p2Name = "اللاعب الثاني";
         let p1Coins = 0; let p2Coins = 0;
         let p1FilledSquares = 0; let p2FilledSquares = 0;
         
@@ -422,6 +450,7 @@
         let isGameActive = false;
         let gameTimerInterval = null;
         let timeLeft = 10;
+        let roomId = "1111";
 
         function arabicAlphabeticalSort(array) {
             return array.sort((a, b) => {
@@ -445,14 +474,79 @@
         function initGame() {
             const typedName = document.getElementById('playerNameInput').value.trim();
             if (!typedName) { alert("❌ اكتب اسمك أولاً!"); return; }
+            roomId = document.getElementById('roomInputField').value.trim() || "1111";
 
-            if(userRole === 1) { p1Name = typedName; document.getElementById('p1NameDisplay').innerText = p1Name; } 
-            else { p2Name = typedName; document.getElementById('p2NameDisplay').innerText = p2Name; }
+            if(userRole === 1) { 
+                p1Name = typedName; 
+                document.getElementById('p1NameDisplay').innerText = p1Name; 
+            } else { 
+                p2Name = typedName; 
+                document.getElementById('p2NameDisplay').innerText = p2Name; 
+            }
 
             document.getElementById('startScreen').style.display = 'none';
             setStageRules();
             setupGrids();
-            generateLeavesOnTree();
+
+            if(supabaseClient) {
+                connectToSupabaseRealtime();
+            } else {
+                document.getElementById('turnDisplay').innerText = "نمط محلي (بدون سيرفر) ⚠️";
+                document.getElementById('mainStartBtn').style.display = "inline-block";
+                document.getElementById('waitingMessage').style.display = "none";
+                generateLeavesOnTree();
+            }
+        }
+
+        function connectToSupabaseRealtime() {
+            gameChannel = supabaseClient.channel(`room-${roomId}`, {
+                config: { broadcast: { self: true } }
+            });
+
+            gameChannel
+            .on('broadcast', { event: 'player_join' }, (payload) => {
+                handlePlayerJoinData(payload.payload);
+            })
+            .on('broadcast', { event: 'start_game' }, (payload) => {
+                syncStartGame(payload.payload);
+            })
+            .on('broadcast', { event: 'correct_pick' }, (payload) => {
+                syncCorrectPick(payload.payload);
+            })
+            .on('broadcast', { event: 'next_stage' }, (payload) => {
+                syncNextStage(payload.payload);
+            })
+            .on('broadcast', { event: 'reset_game' }, (payload) => {
+                syncResetGame();
+            })
+            .subscribe((status) => {
+                if (status === 'SUBSCRIBED') {
+                    gameChannel.send({
+                        type: 'broadcast',
+                        event: 'player_join',
+                        payload: { role: userRole, name: (userRole === 1 ? p1Name : p2Name) }
+                    });
+                }
+            });
+        }
+
+        function handlePlayerJoinData(data) {
+            if(data.role === 1) {
+                p1Name = data.name;
+                document.getElementById('p1NameDisplay').innerText = p1Name;
+            } else if(data.role === 2) {
+                p2Name = data.name;
+                document.getElementById('p2NameDisplay').innerText = p2Name;
+            }
+
+            document.getElementById('turnDisplay').innerText = "متصل أونلاين بنجاح 🌐";
+            
+            if(userRole === 1) {
+                document.getElementById('mainStartBtn').style.display = "inline-block";
+                document.getElementById('waitingMessage').style.display = "none";
+            } else {
+                document.getElementById('waitingMessage').innerText = `بانتظار أن يبدأ [ ${p1Name} ] المباراة...`;
+            }
         }
 
         function setStageRules() {
@@ -479,22 +573,31 @@
             document.getElementById('stageDisplay').innerText = `المرحلة: ${stage}`;
         }
 
-        function generateLeavesOnTree() {
+        function generateLeavesOnTree(customActiveNames = null, customTargetLetter = null) {
             const container = document.getElementById('treeNamesContainer');
             container.innerHTML = "";
             
-            if (dynamicNamesPool.length < 6) {
-                dynamicNamesPool = [...mainNamesPool];
+            if(customActiveNames) {
+                activeStageNames = customActiveNames;
+                currentTargetLetter = customTargetLetter;
+            } else {
+                if (dynamicNamesPool.length < 6) {
+                    dynamicNamesPool = [...mainNamesPool];
+                }
+                let shuffled = [...dynamicNamesPool].sort(() => 0.5 - Math.random());
+                activeStageNames = shuffled.slice(0, Math.min(7, leafCoordinates.length));
+                
+                let randomName = activeStageNames[Math.floor(Math.random() * activeStageNames.length)];
+                currentTargetLetter = randomName.charAt(0);
+                if(["أ","إ","آ"].includes(currentTargetLetter)) currentTargetLetter = "أ";
             }
-
-            let shuffled = dynamicNamesPool.sort(() => 0.5 - Math.random());
-            activeStageNames = shuffled.slice(0, Math.min(7, leafCoordinates.length));
 
             activeStageNames.forEach((name, index) => {
                 const coord = leafCoordinates[index];
                 if (coord) {
                     let btn = document.createElement('button');
                     btn.className = "leaf-name-btn";
+                    btn.id = `leaf-${name}`;
                     btn.innerText = name;
                     btn.style.top = coord.top;
                     btn.style.left = coord.left;
@@ -503,20 +606,33 @@
                 }
             });
 
-            let randomName = activeStageNames[Math.floor(Math.random() * activeStageNames.length)];
-            currentTargetLetter = randomName.charAt(0);
-            if(["أ","إ","آ"].includes(currentTargetLetter)) currentTargetLetter = "أ";
-
-            // لا نغير النص إلا إذا كانت المباراة قد بدأت بالفعل لتفادي مسح زر البدء
             if (isGameActive) {
-                document.getElementById('targetDisplay').innerText = `اقطف اسم يبدأ بحرف: [ ${currentTargetLetter} ]`;
+                document.getElementById('targetDisplay').innerHTML = `اقطف اسم يبدأ بحرف: <span class="glowing-target-letter">${currentTargetLetter}</span>`;
             }
         }
 
-        function startActualGame() {
+        function requestStartGame() {
+            if (dynamicNamesPool.length < 6) dynamicNamesPool = [...mainNamesPool];
+            let shuffled = [...dynamicNamesPool].sort(() => 0.5 - Math.random());
+            let pickedActive = shuffled.slice(0, Math.min(7, leafCoordinates.length));
+            let randomName = pickedActive[Math.floor(Math.random() * pickedActive.length)];
+            let targetL = randomName.charAt(0);
+            if(["أ","إ","آ"].includes(targetL)) targetL = "أ";
+
+            if(gameChannel) {
+                gameChannel.send({
+                    type: 'broadcast',
+                    event: 'start_game',
+                    payload: { activeStageNames: pickedActive, currentTargetLetter: targetL }
+                });
+            } else {
+                syncStartGame({ activeStageNames: pickedActive, currentTargetLetter: targetL });
+            }
+        }
+
+        function syncStartGame(payload) {
             isGameActive = true;
-            // إظهار التحدي الأول فوراً للطفل مكان زر البدء
-            document.getElementById('targetDisplay').innerText = `اقطف اسم يبدأ بحرف: [ ${currentTargetLetter} ]`;
+            generateLeavesOnTree(payload.activeStageNames, payload.currentTargetLetter);
             startTimer();
         }
 
@@ -532,8 +648,9 @@
 
                 if (timeLeft <= 0) {
                     clearInterval(gameTimerInterval);
-                    generateLeavesOnTree();
-                    if(isGameActive) startTimer();
+                    if(userRole === 1) {
+                        requestStartGame();
+                    }
                 }
             }, 1000);
         }
@@ -545,41 +662,14 @@
             if(["أ","إ","آ"].includes(chosenLetter)) chosenLetter = "أ";
 
             if(chosenLetter === currentTargetLetter) {
-                buttonElement.classList.add('correct-pick');
-                clearInterval(gameTimerInterval);
-
-                dynamicNamesPool = dynamicNamesPool.filter(n => n !== chosenName);
-
-                if(userRole === 1) {
-                    if(p1FilledSquares < currentMaxSquares) {
-                        let sq = document.getElementById(`p1-sq-${p1FilledSquares}`);
-                        if(sq) { sq.innerText = chosenName; sq.classList.add('filled'); }
-                        p1StageNames.push(chosenName); 
-                        p1AllTimeNames.push(chosenName);
-                        p1FilledSquares++; p1Coins += 10;
-                        document.getElementById('p1Coins').innerText = p1Coins;
-                        document.getElementById('p1Remain').innerText = currentMaxSquares - p1FilledSquares;
-                    }
+                if(gameChannel) {
+                    gameChannel.send({
+                        type: 'broadcast',
+                        event: 'correct_pick',
+                        payload: { role: userRole, chosenName: chosenName }
+                    });
                 } else {
-                    if(p2FilledSquares < currentMaxSquares) {
-                        let sq = document.getElementById(`p2-sq-${p2FilledSquares}`);
-                        if(sq) { sq.innerText = chosenName; sq.classList.add('filled'); }
-                        p2StageNames.push(chosenName); 
-                        p2AllTimeNames.push(chosenName);
-                        p2FilledSquares++; p2Coins += 10;
-                        document.getElementById('p2Coins').innerText = p2Coins;
-                        document.getElementById('p2Remain').innerText = currentMaxSquares - p2FilledSquares;
-                    }
-                }
-
-                if(p1FilledSquares >= currentMaxSquares || p2FilledSquares >= currentMaxSquares) {
-                    isGameActive = false;
-                    showStageEndModal();
-                } else {
-                    setTimeout(() => {
-                        generateLeavesOnTree();
-                        startTimer();
-                    }, 300);
+                    syncCorrectPick({ role: userRole, chosenName: chosenName });
                 }
             } else {
                 buttonElement.classList.add('wrong-pick');
@@ -587,10 +677,48 @@
             }
         }
 
+        function syncCorrectPick(data) {
+            clearInterval(gameTimerInterval);
+            const btn = document.getElementById(`leaf-${data.chosenName}`);
+            if(btn) btn.classList.add('correct-pick');
+
+            dynamicNamesPool = dynamicNamesPool.filter(n => n !== data.chosenName);
+
+            if(data.role === 1) {
+                if(p1FilledSquares < currentMaxSquares) {
+                    let sq = document.getElementById(`p1-sq-${p1FilledSquares}`);
+                    if(sq) { sq.innerText = data.chosenName; sq.classList.add('filled'); }
+                    p1StageNames.push(data.chosenName); 
+                    p1AllTimeNames.push(data.chosenName);
+                    p1FilledSquares++; p1Coins += 10;
+                    document.getElementById('p1Coins').innerText = p1Coins;
+                    document.getElementById('p1Remain').innerText = currentMaxSquares - p1FilledSquares;
+                }
+            } else {
+                if(p2FilledSquares < currentMaxSquares) {
+                    let sq = document.getElementById(`p2-sq-${p2FilledSquares}`);
+                    if(sq) { sq.innerText = data.chosenName; sq.classList.add('filled'); }
+                    p2StageNames.push(data.chosenName); 
+                    p2AllTimeNames.push(data.chosenName);
+                    p2FilledSquares++; p2Coins += 10;
+                    document.getElementById('p2Coins').innerText = p2Coins;
+                    document.getElementById('p2Remain').innerText = currentMaxSquares - p2FilledSquares;
+                }
+            }
+
+            if(p1FilledSquares >= currentMaxSquares || p2FilledSquares >= currentMaxSquares) {
+                isGameActive = false;
+                showStageEndModal();
+            } else {
+                if(userRole === 1) {
+                    setTimeout(() => { requestStartGame(); }, 400);
+                }
+            }
+        }
+
         function showStageEndModal() {
             clearInterval(gameTimerInterval);
             const modalTitle = document.getElementById('modalTitle');
-            const actionBtn = document.getElementById('modalActionBtn');
             const trophy = document.getElementById('modalTrophy');
             
             const p1ListDiv = document.getElementById('p1HarvestList');
@@ -601,43 +729,74 @@
 
             if (stage >= 3 || p1AllTimeNames.length >= 14 || p2AllTimeNames.length >= 14) {
                 trophy.style.display = 'block';
-                modalTitle.innerText = "🏆 التحدي النهائي الشامل (14 اسماً فريداً دون تكرار) 🏆";
+                modalTitle.innerText = "🏆 التحدي النهائي الشامل 🏆";
                 
                 let p1Sorted = arabicAlphabeticalSort([...p1AllTimeNames]).slice(0, 14);
                 let p2Sorted = arabicAlphabeticalSort([...p2AllTimeNames]).slice(0, 14);
 
                 p1ListDiv.innerHTML = `<b>📦 حصادك الأبجدي النهائي المرتب (الألف إلى الياء):</b><br>${p1Sorted.length > 0 ? p1Sorted.join(' 🌳 ') : 'لا يوجد أسماء'}`;
                 p2ListDiv.innerHTML = `<b>📦 حصادك الأبجدي النهائي المرتب (الألف إلى الياء):</b><br>${p2Sorted.length > 0 ? p2Sorted.join(' 🌳 ') : 'لا يوجد أسماء'}`;
-
-                actionBtn.innerText = "🔄 البدء من جديد لتحدي آخر";
-                actionBtn.onclick = resetEntireGame;
             } else {
                 trophy.style.display = 'none';
-                modalTitle.innerText = `🎉 نهاية المرحلة ${stage}`;
-                
-                p1ListDiv.innerHTML = `<b>🍃 أسماء مقطوفة في هذه المرحلة:</b><br>${p1StageNames.join(' ، ')}`;
-                p2ListDiv.innerHTML = `<b>🍃 أسماء مقطوفة في هذه المرحلة:</b><br>${p2StageNames.join(' ، ')}`;
-
-                actionBtn.innerText = "الانتقال للمرحلة التالية ◀";
-                actionBtn.onclick = closeModalAndNext;
+                modalTitle.innerText = `🎉 الانتقال للمرحلة ${stage + 1}`;
+                p1ListDiv.innerHTML = `<b>📦 حصاد المرحلة الحالية:</b><br>${p1StageNames.join(' 🌳 ')}`;
+                p2ListDiv.innerHTML = `<b>📦 حصاد المرحلة الحالية:</b><br>${p2StageNames.join(' 🌳 ')}`;
             }
-            
+
             document.getElementById('stageModal').style.display = 'flex';
+
+            const actionBtn = document.getElementById('modalActionBtn');
+            if (stage >= 3 || p1AllTimeNames.length >= 14 || p2AllTimeNames.length >= 14) {
+                actionBtn.innerText = "🔄 إعادة تشغيل اللعبة كاملة";
+                actionBtn.onclick = () => { requestResetGame(); };
+            } else {
+                actionBtn.innerText = `الانتقال للمرحلة ${stage + 1} ◀`;
+                actionBtn.onclick = () => { requestNextStage(); };
+            }
         }
 
-        function closeModalAndNext() {
+        function requestNextStage() {
+            if (gameChannel) {
+                gameChannel.send({
+                    type: 'broadcast',
+                    event: 'next_stage',
+                    payload: { nextStage: stage + 1 }
+                });
+            } else {
+                syncNextStage({ nextStage: stage + 1 });
+            }
+        }
+
+        function syncNextStage(payload) {
             document.getElementById('stageModal').style.display = 'none';
-            stage++;
-            p1FilledSquares = 0; p2FilledSquares = 0;
-            p1StageNames = []; p2StageNames = [];
+            stage = payload.nextStage;
+            
+            p1StageNames = [];
+            p2StageNames = [];
+            p1FilledSquares = 0;
+            p2FilledSquares = 0;
+
             setStageRules();
             setupGrids();
-            generateLeavesOnTree();
-            isGameActive = true; 
-            startTimer();
+
+            if (userRole === 1) {
+                setTimeout(() => { requestStartGame(); }, 1000);
+            }
         }
 
-        function resetEntireGame() {
+        function requestResetGame() {
+            if (gameChannel) {
+                gameChannel.send({
+                    type: 'broadcast',
+                    event: 'reset_game',
+                    payload: {}
+                });
+            } else {
+                syncResetGame();
+            }
+        }
+
+        function syncResetGame() {
             document.getElementById('stageModal').style.display = 'none';
             stage = 1;
             p1Coins = 0; p2Coins = 0;
@@ -645,20 +804,28 @@
             p1StageNames = []; p2StageNames = [];
             p1AllTimeNames = []; p2AllTimeNames = [];
             dynamicNamesPool = [...mainNamesPool];
+
             document.getElementById('p1Coins').innerText = "0";
             document.getElementById('p2Coins').innerText = "0";
-            
-            // إعادة عرض زر البدء عند التصفير الكامل
-            document.getElementById('targetDisplay').innerHTML = `<button class="mid-start-btn" id="mainStartBtn" onclick="startActualGame()">▶ ابدأ المباراة الآن</button>`;
-            
+
             setStageRules();
             setupGrids();
-            generateLeavesOnTree();
+
+            if (userRole === 1) {
+                setTimeout(() => { requestStartGame(); }, 1000);
+            }
         }
 
         function toggleAudio() {
             const audio = document.getElementById('gameAudio');
-            audio.paused ? audio.play().catch(()=>{}) : audio.pause();
+            const btn = document.querySelector('.music');
+            if (audio.paused) {
+                audio.play().catch(e => console.log("Audio play blocked"));
+                btn.innerText = "🎵";
+            } else {
+                audio.pause();
+                btn.innerText = "🔇";
+            }
         }
     </script>
 </body>
